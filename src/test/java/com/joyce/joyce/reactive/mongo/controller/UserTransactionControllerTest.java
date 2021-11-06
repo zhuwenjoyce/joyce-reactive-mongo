@@ -13,8 +13,10 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * @author Joyce Zhu
@@ -36,9 +38,16 @@ public class UserTransactionControllerTest {
 
     @Test
     public void saveAll() throws Exception {
+        Random random = new Random();
         List<UserModel> list = new ArrayList<>();
-        list.add(UserModel.builder().username("user3").money(new BigDecimal(500)).build());
-        list.add(UserModel.builder().username("user4").money(new BigDecimal(900)).build());
+        list.add(UserModel.builder().username("user5")
+                .money(new BigDecimal(500))
+                .birthday(ZonedDateTime.now().minusDays(random.nextInt(3000)))
+                .createTime(ZonedDateTime.now()).build());
+        list.add(UserModel.builder().username("user6")
+                .money(new BigDecimal(900))
+                .birthday(ZonedDateTime.now().minusDays(random.nextInt(3000)))
+                .createTime(ZonedDateTime.now()).build());
 
         StepVerifier.create(userRepository.saveAll(list))
                 .expectNextCount(2)
@@ -54,8 +63,6 @@ public class UserTransactionControllerTest {
     @Test
     public void saveMany() throws Exception {
         List<UserModel> list = new ArrayList<>();
-        list.add(UserModel.builder().username("user3").money(new BigDecimal(500)).build());
-        list.add(UserModel.builder().username("user4").money(new BigDecimal(900)).build());
 
     }
 
