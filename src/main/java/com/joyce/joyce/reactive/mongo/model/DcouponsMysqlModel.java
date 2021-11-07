@@ -32,7 +32,7 @@ public class DcouponsMysqlModel {
     private Long id;    //自增主键
 
     @Column(name = "mongo_id")
-    private Integer mongoId;
+    private String mongoId;
     private String status;   //active,pending,redeemed
     private String vid;      //19位数字
     @Column(name = "coupon_id")

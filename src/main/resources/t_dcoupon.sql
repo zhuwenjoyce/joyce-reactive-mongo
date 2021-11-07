@@ -23,7 +23,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `t_dcoupon`;
 CREATE TABLE `t_dcoupon`  (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `mongo_id` int(8) NOT NULL,
+  `mongo_id` varchar (10) NOT NULL,
   `status` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `vid` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `coupon_id` varchar(40) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,

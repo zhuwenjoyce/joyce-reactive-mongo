@@ -25,7 +25,7 @@ public class DcouponMysqlController {
     public Mono<DcouponsMysqlModel> findByUsername() {
         DcouponsMysqlModel model = DcouponsMysqlModel.builder()
                 .id(1L)
-                .mongoId(1)
+                .mongoId("1")
                 .vid("vid1")
                 .status("active")
                 .swid("swid")
