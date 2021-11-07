@@ -20,9 +20,7 @@ import java.time.ZonedDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "myusers")
-@ReadingConverter
-@WritingConverter
+@Document(collection = "users")
 public class UserModel {
     @Id
     private String id;
