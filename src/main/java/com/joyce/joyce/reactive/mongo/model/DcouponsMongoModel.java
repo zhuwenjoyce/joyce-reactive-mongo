@@ -18,7 +18,7 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "dcoupons")
-public class DcouponsModel {
+public class DcouponsMongoModel {
 
     @Id
     private String _id;    //32位uuid全小写

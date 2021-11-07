@@ -3,6 +3,7 @@ package com.joyce.joyce.reactive.mongo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
+import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.web.reactive.config.EnableWebFlux;
 
 /**
@@ -15,6 +16,7 @@ import org.springframework.web.reactive.config.EnableWebFlux;
  */
 @EnableWebFlux
 @EnableReactiveMongoRepositories
+@EnableR2dbcRepositories
 @SpringBootApplication
 public class JoyceReactiveMongoApplication {
 

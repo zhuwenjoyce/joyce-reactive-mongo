@@ -1,7 +1,7 @@
 package com.joyce.joyce.reactive.mongo.压测;
 
-import com.joyce.joyce.reactive.mongo.dao.DcouponsRepository;
-import com.joyce.joyce.reactive.mongo.model.DcouponsModel;
+import com.joyce.joyce.reactive.mongo.dao.DcouponsMongoRepository;
+import com.joyce.joyce.reactive.mongo.model.DcouponsMongoModel;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,9 +24,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class 批量insert {
+public class Mongo批量insert {
     @Autowired
-    DcouponsRepository dcouponsRepository;
+    DcouponsMongoRepository dcouponsMongoRepository;
     final Random random = new Random();
     String[] couponIdArr = {"DC20210225EPEP1","DC20210225EPEP2","DC20210225EPEP3","DC20210225EPEP4","DC20210225EPEP5",
             "DC20210225EPEP6","DC20210225EPEP7","DC20210225EPEP8","DC20210225EPEP9","DC20210225EPEP10",
@@ -42,7 +42,7 @@ public class 批量insert {
             vid = vid + random.nextInt(10);
         }
         ZonedDateTime issueTime = ZonedDateTime.now().minusDays(random.nextInt(1825));   // 随机减去过去五年1825天内，任意天数
-        DcouponsModel dcoupon = DcouponsModel.builder()
+        DcouponsMongoModel dcoupon = DcouponsMongoModel.builder()
                 ._id(incrementId.addAndGet(1) + "")
                 .status(random.nextInt(100) > 60?"active":"redeemed")
                 .vid(vid)
@@ -55,17 +55,17 @@ public class 批量insert {
                 .createAt(issueTime)
                 .updateAt(issueTime)
                 .build();
-        dcouponsRepository.save(dcoupon).subscribe();
+        dcouponsMongoRepository.save(dcoupon).subscribe();
     }
 
     //批量造数据，通过目测，大概一秒钟能insert 1万多条数据，也就是100万条数据insert到mongodb大概只需要100秒
     @Test
     public void batchInsert() throws InterruptedException {
         AtomicInteger incrementId = new AtomicInteger(1001018);
-        List<DcouponsModel> modelList = new ArrayList<>();
+        List<DcouponsMongoModel> modelList = new ArrayList<>();
 
         Flux.range(1, 200000)
-                .flatMap(i -> dcouponsRepository.save(getDcouponModel(incrementId)))
+                .flatMap(i -> dcouponsMongoRepository.save(getDcouponModel(incrementId)))
                 .last()
                 .doFinally(t -> {
                     log.error("doFinally!!! t = {}", t);
@@ -82,7 +82,7 @@ public class 批量insert {
         }
     }
 
-    private DcouponsModel getDcouponModel(AtomicInteger incrementId) {
+    private DcouponsMongoModel getDcouponModel(AtomicInteger incrementId) {
         String vid = "";
         for (int j = 0; j < 20; j++) {
             vid = vid + random.nextInt(10);
@@ -92,7 +92,7 @@ public class 批量insert {
             log.info("id = {}", id);
         }
         ZonedDateTime issueTime = ZonedDateTime.now().minusDays(random.nextInt(1825));   // 随机减去过去五年1825天内，任意天数
-        DcouponsModel dcoupon = DcouponsModel.builder()
+        DcouponsMongoModel dcoupon = DcouponsMongoModel.builder()
                 ._id(id + "")
                 .idint(id)
                 .status(random.nextInt(100) > 60?"active":"redeemed")
