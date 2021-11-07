@@ -3,6 +3,8 @@ package com.joyce.joyce.reactive.mongo.controller;
 import com.joyce.joyce.reactive.mongo.dao.UserRepository;
 import com.joyce.joyce.reactive.mongo.model.UserModel;
 import com.mongodb.reactivestreams.client.MongoClient;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.ReactiveTransactionManager;
@@ -20,21 +22,15 @@ import java.util.Map;
  * @author Joyce Zhu
  * @date 2021-11-06
  */
-//@Controller
+@Slf4j
+@Controller
+@RequiredArgsConstructor
 public class UserTransactionController {
 
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(UserTransactionController.class);
     final MongoClient mongoClient;
     final UserRepository userRepository;
     final TransactionalOperator transactionalOperator;
     final ReactiveTransactionManager reactiveTransactionManager;
-
-    public UserTransactionController(MongoClient mongoClient, UserRepository userRepository, TransactionalOperator transactionalOperator, ReactiveTransactionManager reactiveTransactionManager) {
-        this.mongoClient = mongoClient;
-        this.userRepository = userRepository;
-        this.transactionalOperator = transactionalOperator;
-        this.reactiveTransactionManager = reactiveTransactionManager;
-    }
 
     @RequestMapping("/user/findAll")
     public Flux<UserModel> findByUsername() {

@@ -12,7 +12,7 @@ import org.springframework.transaction.reactive.TransactionalOperator;
  * @author Joyce Zhu
  * @date 2021-11-06
  */
-//@Configuration
+@Configuration
 public class ConfigMongodbTransaction {
 
     @Bean
