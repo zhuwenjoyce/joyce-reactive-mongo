@@ -5,9 +5,11 @@ import com.joyce.joyce.reactive.mongo.model.DcouponsMongoModel;
 import com.joyce.joyce.reactive.mongo.model.DcouponsMysqlModel;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
+import org.junit.platform.commons.util.StringUtils;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
@@ -17,6 +19,7 @@ import reactor.core.publisher.Mono;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
@@ -50,6 +53,7 @@ public class Dcoupons数据迁移从mongo到mysql {
         String paramStartDate = "2016-11-09";
         ZonedDateTime migrateStartTime = ZonedDateTime.from(formatter.withZone(ZoneId.systemDefault()).parse(paramStartDate + " 00:00:00"));
         log.info("migrateStartTime = " + migrateStartTime); //2011-05-24T14:15:30+08:00[Asia/Shanghai]
+        AtomicBoolean quitSystem = new AtomicBoolean(false);
 
         Long startMs = System.currentTimeMillis();
         migrateByCreateAtBetween(migrateStartTime)
@@ -61,26 +65,29 @@ public class Dcoupons数据迁移从mongo到mysql {
                 })
                 .doFinally(t -> {
                     Long endMs = System.currentTimeMillis();
-                    log.info("migrate is finished in {} ms", endMs.longValue() - startMs.longValue());
+                    log.info("migrate is finished in {} ms, total migrate count - {}", endMs.longValue() - startMs.longValue(), totalMigrateCount.get());
+                    quitSystem.set(true);
                 })
                 .subscribe();
-        while (true) {
+        while (!quitSystem.get()) {
 
         }
     }
 
     private Mono<DcouponsMysqlModel> migrateByCreateAtBetween(ZonedDateTime migrateStartTime) {
-        if (migrateStartTime.compareTo(ZonedDateTime.now()) >= 0) {
+        if (migrateStartTime.compareTo(ZonedDateTime.now()) >= 0 || totalMigrateCount.get() > 55000) {
+            log.info("迁移终止 migrate start time = {}, total migrate count = {}", migrateStartTime.format(formatter), totalMigrateCount.get());
             return Mono.just(DcouponsMysqlModel.builder().build());
         }
 
-        ZonedDateTime migrateEndTime = migrateStartTime.plusHours(96);
+        ZonedDateTime migrateEndTime = migrateStartTime.plusDays(1);
         AtomicInteger currentMigrateCount = new AtomicInteger(0);
 
         return reactiveMongoTemplate.find(
-                query(where("createAt").gte(migrateStartTime).lte(migrateEndTime)).with(Sort.by("createAt").ascending())
+                        query(where("createAt").gte(migrateStartTime).lte(migrateEndTime)).with(Sort.by("createAt").ascending())
                         , DcouponsMongoModel.class, "dcoupons")
                 .flatMap(m -> {
+                    log.info("vid {} 迁移中...", m.getVid());
                     DcouponsMysqlModel dcouponsMysqlModel = DcouponsMysqlModel.builder().vid(m.getVid())
                             .swid(m.getSwid())
                             .couponId(m.getCouponId())
@@ -93,18 +100,25 @@ public class Dcoupons数据迁移从mongo到mysql {
                             .createTime(m.getCreateAt())
                             .updateTime(m.getUpdateAt())
                             .build();
-                    return r2dbcEntityTemplate.insert(dcouponsMysqlModel);
+                    return r2dbcEntityTemplate.insert(dcouponsMysqlModel)
+                            .onErrorResume(DataIntegrityViolationException.class, throwable -> {
+//                                log.warn("Duplicate vid error message = {}", throwable.getMessage());
+                                return Mono.just(DcouponsMysqlModel.builder().vid(m.getVid()).build());
+                            });
                 })
                 .doOnNext(dcouponsMysqlModel -> {
-                    currentMigrateCount.addAndGet(1);
+                    if (StringUtils.isBlank(dcouponsMysqlModel.getSwid())) {
+                        log.info("vid {} 迁移失败，vid已存在", dcouponsMysqlModel.getVid());
+                    } else {
+                        log.info("vid {} 迁移成功", dcouponsMysqlModel.getVid());
+                        currentMigrateCount.addAndGet(1);
+                    }
                 })
-                .defaultIfEmpty(DcouponsMysqlModel.builder().build())
                 .last()
-                .doOnNext(dcouponsMysqlModel -> {
-                    log.info("current migrate count = {}, total migrate count = {}, dcoupon vid = {}, createAt between {} and {}"
+                .doOnNext(obj -> {
+                    log.info("====================== current migrate count = {}, total migrate count = {}, createAt between {} and {}"
                             , currentMigrateCount.get()
                             , totalMigrateCount.addAndGet(currentMigrateCount.get())
-                            , dcouponsMysqlModel.getVid()
                             , migrateStartTime.format(formatter)
                             , migrateEndTime.format(formatter));
                 })
