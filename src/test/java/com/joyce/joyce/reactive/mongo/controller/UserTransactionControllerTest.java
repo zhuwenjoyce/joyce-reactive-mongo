@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.ReactiveTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
@@ -28,6 +30,7 @@ import java.util.Random;
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@EnableTransactionManagement // it can support the transaction demos
 public class UserTransactionControllerTest {
 
     @Autowired
@@ -84,8 +87,9 @@ public class UserTransactionControllerTest {
 
     }
 
+    @Transactional
     @Test
-    public void flux事务例子1() {
+    public void flux事务例子1() {  // 需要在类上加注解：@EnableTransactionManagement 或者在方法上加注解：@Transactional 建议使用方法注解，可以缩小事务范围
         List<UserModel> list = new ArrayList<>();
         list.add(UserModel.builder().username("user5")
                 .money(new BigDecimal(500))
@@ -100,8 +104,9 @@ public class UserTransactionControllerTest {
         transactionalOperator.execute(status ->flux);
     }
 
+    @Transactional
     @Test
-    public void flux事务例子2(){
+    public void flux事务例子2(){  // 需要在类上加注解：@EnableTransactionManagement  或者在方法上加注解：@Transactional 建议使用方法注解，可以缩小事务范围
         List<UserModel> list = new ArrayList<>();
         list.add(UserModel.builder().username("user5")
                 .money(new BigDecimal(500))
